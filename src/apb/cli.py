@@ -8,16 +8,31 @@ SKIP_OPTIONS = ['provision', 'deprovision', 'bind', 'unbind', 'roles']
 
 AVAILABLE_COMMANDS = {
     'help': 'Display this help message',
+    'list': 'Remove APBs from the target Ansible Service Broker',
     'init': 'Initialize the directory for APB development',
     'prepare': 'Prepare an ansible-container project for APB packaging',
     'build': 'Build and package APB container',
-    'push': 'Push APB spec to an Ansible Service Broker'
+    'push': 'Push local APB spec to an Ansible Service Broker',
+    'remove': 'Remove APBs from the target Ansible Service Broker',
+    'bootstrap': 'Tell Ansible Service Broker to reload APBs from the container repository'
 }
+
+
+def subcmd_list_parser(parser, subcmd):
+    subcmd.add_argument(
+        '--broker',
+        action='store',
+        dest='broker',
+        help=u'Route to the Ansible Service Broker'
+    )
+    return
 
 
 def subcmd_build_parser(parser, subcmd):
     subcmd.add_argument(
-        '--tag', action='store', dest='tag',
+        '--tag',
+        action='store',
+        dest='tag',
         help=u'Tag of APB to build'
     )
     return
@@ -25,40 +40,59 @@ def subcmd_build_parser(parser, subcmd):
 
 def subcmd_init_parser(parser, subcmd):
     subcmd.add_argument(
-        'tag', action='store',
+        'tag',
+        action='store',
         help=u'Tag (org/name) or name of APB to initialize'
     )
 
     subcmd.add_argument(
-        '--org', '-o', action='store', dest='org',
+        '--org',
+        '-o',
+        action='store',
+        dest='org',
         help=u'Organization of APB to publish to'
     )
 
     subcmd.add_argument(
-        '--force', action='store_true', dest='force',
-        help=u'Force re-init on current directory', default=False
+        '--force',
+        action='store_true',
+        dest='force',
+        help=u'Force re-init on current directory',
+        default=False
     )
 
     subcmd.add_argument(
-        '--async', action='store', dest='async',
-        help=u'Specify asynchronous operation on application.', default='optional',
+        '--async',
+        action='store',
+        dest='async',
+        help=u'Specify asynchronous operation on application.',
+        default='optional',
         choices=['required', 'optional', 'unsupported']
     )
 
     subcmd.add_argument(
-        '--bindable', action='store_true', dest='bindable',
-        help=u'Make application bindable on the spec.', default=False
+        '--bindable',
+        action='store_true',
+        dest='bindable',
+        help=u'Make application bindable on the spec.',
+        default=False
     )
 
     subcmd.add_argument(
-        '--param', '-p', action='append', dest='params',
+        '--param',
+        '-p',
+        action='append',
+        dest='params',
         help=u'Parameter declaration separated by commas'
     )
 
     for opt in SKIP_OPTIONS:
         subcmd.add_argument(
-            '--skip-%s' % opt, action='store_true', dest='skip-%s' % opt,
-            help=u'Specify which playbooks to not generate by default.', default=False
+            '--skip-%s' % opt,
+            action='store_true',
+            dest='skip-%s' % opt,
+            help=u'Specify which playbooks to not generate by default.',
+            default=False
         )
 
     return
@@ -66,7 +100,9 @@ def subcmd_init_parser(parser, subcmd):
 
 def subcmd_prepare_parser(parser, subcmd):
     subcmd.add_argument(
-        '--provider', action='store', dest='provider',
+        '--provider',
+        action='store',
+        dest='provider',
         help=u'Targetted cluster type',
         choices=['openshift', 'kubernetes'],
         default='openshift'
@@ -76,9 +112,46 @@ def subcmd_prepare_parser(parser, subcmd):
 
 def subcmd_push_parser(parser, subcmd):
     subcmd.add_argument(
-        '--broker', action='store', dest='broker',
+        '--broker',
+        action='store',
+        dest='broker',
         help=u'Route to the Ansible Service Broker'
     )
+    return
+
+
+def subcmd_remove_parser(parser, subcmd):
+    subcmd.add_argument(
+        '--broker',
+        action='store',
+        dest='broker',
+        help=u'Route to the Ansible Service Broker'
+    )
+    subcmd.add_argument(
+        '--all',
+        action='store_true',
+        dest='all',
+        help=u'Remove all stored APBs',
+        default=False
+    )
+    subcmd.add_argument(
+        '--id',
+        action='store',
+        dest='id',
+        help=u'ID of APB to remove'
+    )
+    return
+
+
+def subcmd_bootstrap_parser(parser, subcmd):
+    subcmd.add_argument(
+        '--broker',
+        action='store',
+        dest='broker',
+        help=u'Route to the Ansible Service Broker'
+    )
+    return
+
 
 def subcmd_help_parser(parser, subcmd):
     return
@@ -91,13 +164,19 @@ def main():
     )
 
     parser.add_argument(
-        '--debug', action='store_true', dest='debug',
-        help=u'Enable debug output', default=False
+        '--debug',
+        action='store_true',
+        dest='debug',
+        help=u'Enable debug output',
+        default=False
     )
 
     # TODO: Modify project to accept relative paths
     parser.add_argument(
-        '--project', '-p', action='store', dest='base_path',
+        '--project',
+        '-p',
+        action='store',
+        dest='base_path',
         help=u'Specify a path to your project. Defaults to CWD.',
         default=os.getcwd()
     )
