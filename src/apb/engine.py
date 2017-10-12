@@ -569,8 +569,9 @@ def broker_request(url, service_route, method, broker_name=None, **kwargs):
         else:
             token = openshift_client.configuration.api_key.get("authorization", "")
             headers = {'Authorization': token}
-        response = requests.request(method, url, verify=kwargs["verify"],
+        response = requests.request(method, url + service_route, verify=kwargs["verify"],
                                     headers=headers, data=kwargs.get("data"))
+
     except Exception as e:
         print("ERROR: Failed broker request (%s) %s" % (method, url))
         raise e
