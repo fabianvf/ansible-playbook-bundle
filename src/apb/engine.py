@@ -23,6 +23,15 @@ from jinja2 import Environment, FileSystemLoader
 from kubernetes import client as kubernetes_client
 from kubernetes.client.rest import ApiException
 
+
+def debug(func):
+    import ipdb
+
+    def inner(*args, **kwargs):
+        with ipdb.launch_ipdb_on_exception():
+            return func(*args, **kwargs)
+    return inner
+
 ROLES_DIR = 'roles'
 
 DAT_DIR = 'dat'
@@ -390,7 +399,7 @@ def broker_resource(broker_name, **kwargs):
 
 
 def broker_resource_url(host, broker_name):
-    return "{}/apis/servicecatalog.k8s.io/v1beta1/clusterservicebrokers/{}".format(host, broker_name)
+    return "{}/apis/servicecatalog.k8s.io/v1alpha1/servicebrokers/{}".format(host, broker_name)
 
 
 def relist_service_broker(kwargs):
@@ -569,6 +578,7 @@ def broker_request(url, service_route, method, broker_name=None, **kwargs):
     return response
 
 
+@debug
 def cmdrun_list(**kwargs):
     response = broker_request(kwargs['broker'], "/v2/catalog", "get",
                               verify=kwargs["verify"],
